@@ -1,0 +1,224 @@
+create table Crime (
+CrimeID INT PRIMARY KEY,
+IncidentType VARCHAR(255),
+IncidentDate DATE,
+Location VARCHAR(255),
+Description TEXT,
+Status VARCHAR(20)
+);
+
+INSERT INTO Crime (CrimeID, IncidentType, IncidentDate, Location, Description, Status)
+VALUES
+(1, 'Robbery', '2023-09-15', '123 Main St, Cityville', 'Armed robbery at a convenience store', 'Open'),
+(2, 'Homicide', '2023-09-20', '456 Elm St, Townsville', 'Investigation into a murder case', 'Under
+Investigation'),
+(3, 'Theft', '2023-09-10', '789 Oak St, Villagetown', 'Shoplifting incident at a mall', 'Closed'),
+(4,'Theft','2023-11-11','366 Main St,Downtown','robbery near H&M store','Under Investigation'),
+(5,'Accident','2023-12-28','Main road,Villagetown','accident in main road','Closed');
+
+CREATE TABLE Victim (
+VictimID INT PRIMARY KEY,
+CrimeID INT,
+Name VARCHAR(255),
+ContactInfo VARCHAR(255),
+Injuries VARCHAR(255),
+FOREIGN KEY (CrimeID) REFERENCES Crime(CrimeID)
+);
+
+INSERT INTO Victim (VictimID, CrimeID, Name, ContactInfo, Injuries)
+VALUES
+(1, 1, 'John Doe', 'johndoe@example.com', 'Minor injuries'),
+(2, 2, 'Jane Smith', 'janesmith@example.com', 'Deceased'),
+(3, 3, 'Alice Johnson', 'alicejohnson@example.com', 'None'),
+(4,4,'Nick Jones','nick@gmail.com','Minor injuries'),
+(5,5,'Luna Valeria','valaeria@gmail.com','Several injuries');
+
+CREATE TABLE Suspect (
+SuspectID INT PRIMARY KEY,
+CrimeID INT,
+Name VARCHAR(255),
+Description TEXT,
+CriminalHistory TEXT,
+FOREIGN KEY (CrimeID) REFERENCES Crime(CrimeID)
+);
+
+INSERT INTO Suspect (SuspectID, CrimeID, Name, Description, CriminalHistory)
+VALUES
+(1, 1, 'Robber 1', 'Armed and masked robber', 'Previous robbery convictions'),
+(2, 2, 'Unknown', 'Investigation ongoing', NULL),
+(3, 3, 'Suspect 1', 'Shoplifting suspect', 'Prior shoplifting arrests'),
+(4,4,'Robber 2','Masked robber','committed couple of armed robberies'),
+(5,5,'Unknown','Investigation Closed',NULL);
+
+1.select IncidentType from Crime where status='Open';
++--------------+
+| IncidentType |
++--------------+
+| Robbery      |
++--------------+
+
+2.select count(CrimeId) as TotalIncidents from Crime;
++----------------+
+| TotalIncidents |
++----------------+
+|              5        |
++----------------+
+
+3.select distinct IncidentType from Crime;
++--------------+
+| IncidentType |
++--------------+
+| Robbery      |
+| Homicide     |
+| Theft        |
+| Accident     |
++--------------+
+ 
+4.select IncidentType as Incidents from Crime where IncidentDate between '2023-09-01' and '2023-09-10';
++-----------+
+| Incidents |
++-----------+
+| Theft     |
++-----------+
+
+5.select s.Name,s.age from Suspect s 
+join  Crime c on s.CrimeID=c.CrimeID
+order by s.age desc;
++-----------+------+
+| Name      | age  |
++-----------+------+
+| Unknown   |   43 |
+| Suspect 1 |   32 |
+| Robber 1  |   29 |
+| Unknown   |   27 |
+| Robber 2  |   24 |
++-----------+------+
+
+6.select avg(s.age) as AverageAge from Suspect s
+join Crime c where s.CrimeID=c.CrimeID;
++------------+
+| AverageAge |
++------------+
+|    31.0000 |
++------------+
+
+7.select IncidentType,count(IncidentType) from Crime where Status='Open'  group by IncidentType;
++--------------+---------------------+
+| IncidentType | count(IncidentType) |
++--------------+---------------------+
+| Robbery      |                   1 |
++--------------+---------------------+
+
+8.select Name from Victim where Name LIKE '%Doe%';
++----------+
+| Name     |
++----------+
+| John Doe |
++----------+
+
+9.select s.Name from Suspect s join
+Crime c on C.CrimeID=s.CrimeID
+where c.status='open' or c.status='closed';
++-----------+
+| Name      |
++-----------+
+| Robber 1  |
+| Suspect 1 |
+| Unknown   |
++-----------+
+
+10.select IncidentType from Crime c 
+join Suspect s on c.CrimeID=s.CrimeID 
+where s.age=30 or s.age= 35;
+
+Empty set (0.00 sec)
+
+11.select s.Name from Suspect s join Crime c
+on s.CrimeID=c.CrimeID
+where c.IncidentType='Robbery' OR c.IncidentType='Theft';
++-----------+
+| Name      |
++-----------+
+| Robber 1  |
+| Suspect 1 |
+| Robber 2  |
++-----------+
+
+12.select IncidentType from Crime 
+where status='open' group by IncidentType
+having count(*)>1;
+
+Empty set (0.00 sec)
+
+13.select c.* from Crime c join 
+Suspect s on c.CrimeID = s.CrimeID 
+where s.Name in (select Name from Victim);
+
+Empty set (0.00 sec)
+
+14.select c.IncidentType,s.*,v.*  from Crime c
+join Suspect s ON s.CrimeID=c.CrimeID
+join Victim v ON v.CrimeID=c.CrimeID;
++--------------+-----------+---------+-----------+-------------------------+-------------------------------------+------+----------+---------+---------------+--------------------------+------------------+------+
+| IncidentType | SuspectID | CrimeID | Name      | Description             | CriminalHistory                     | age  | VictimID | CrimeID | Name          | ContactInfo              | Injuries         | age  |
++--------------+-----------+---------+-----------+-------------------------+-------------------------------------+------+----------+---------+---------------+--------------------------+------------------+------+
+| Robbery      |         1 |       1 | Robber 1  | Armed and masked robber | Previous robbery convictions        |   29 |        1 |       1 | John Doe      | johndoe@example.com      | Minor injuries   |   27 |
+| Homicide     |         2 |       2 | Unknown   | Investigation ongoing   | NULL                                |   43 |        2 |       2 | Jane Smith    | janesmith@example.com    | Deceased         |   45 |
+| Theft        |         3 |       3 | Suspect 1 | Shoplifting suspect     | Prior shoplifting arrests           |   32 |        3 |       3 | Alice Johnson | alicejohnson@example.com | None             |   23 |
+| Theft        |         4 |       4 | Robber 2  | Masked robber           | committed couple of armed robberies |   24 |        4 |       4 | Nick Jones    | nick@gmail.com           | Minor injuries   |   28 |
+| Accident     |         5 |       5 | Unknown   | Investigation Closed    | NULL                                |   27 |        5 |       5 | Luna Valeria  | valaeria@gmail.com       | Several injuries |   49 |
++--------------+-----------+---------+-----------+-------------------------+-------------------------------------+------+----------+---------+---------------+--------------------------+------------------+------+
+15.select c.IncidentType from Crime c
+join Suspect s on c.CrimeID=s.CrimeID
+join Victim v on c.CrimeID=v.CrimeID
+where s.age>v.age;
++--------------+
+| IncidentType |
++--------------+
+| Robbery      |
+| Theft        |
++--------------+
+
+16.select Name from Suspect s where CrimeID =
+(select CrimeID from Crime group by CrimeID
+HAVING count(*)>1);
+
+Empty set (0.00 sec)
+
+17.select c.IncidentType from Crime c
+left join Suspect s on c.CrimeID=s.CrimeID
+where s.SuspectID=null;
+
+Empty set (0.00 sec)
+
+18. select CrimeID from Crime
+    where IncidentType='Homicide' or IncidentType='Robbery';
++---------+
+| CrimeID |
++---------+
+|       1 |
+|       2 |
++---------+
+
+19.SELECT c.CrimeId,c.IncidentType,
+COALESCE(s.Name, 'No Suspect') AS suspect_name
+FROM Crime c
+LEFT JOIN Suspect s ON c.CrimeID = s.CrimeID;
++---------+--------------+--------------+
+| CrimeId | IncidentType | suspect_name |
++---------+--------------+--------------+
+|       1 | Robbery      | Robber 1     |
+|       2 | Homicide     | Unknown      |
+|       3 | Theft        | Suspect 1    |
+|       4 | Theft        | Robber 2     |
+|       5 | Accident     | Unknown      |
++---------+--------------+--------------+
+
+20.select s.Name from Suspect s
+join Crime c ON s.CrimeID=c.CrimeID
+where c.IncidentType='Robbery' or c.IncidentType='Assault';
++----------+
+| Name     |
++----------+
+| Robber 1 |
++----------+
